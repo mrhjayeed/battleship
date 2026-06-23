@@ -41,7 +41,7 @@ CREATE TABLE game_sessions (
 );
 
 -- Leaderboard view
-CREATE OR REPLACE VIEW leaderboard AS
+CREATE OR REPLACE VIEW leaderboard WITH (security_invoker = true) AS
 SELECT
   id,
   name,

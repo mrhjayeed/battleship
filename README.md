@@ -122,17 +122,36 @@ git push -u origin main
    - Add a build environment variable: `VITE_SOCKET_URL` set to your backend service URL.
    - Deploy as a static app.
 
-### Option B: Render + Supabase (Free Tier Alternative)
-1. **Supabase Setup**:
-   - Create a project on Supabase and copy the **URI Connection String** under Database Settings.
-2. **Deploy Server on Render**:
-   - Create a new **Web Service** on Render connected to your repository.
-   - Specify `server` as the root directory.
-   - Configure **Environment Variables**:
-     - `DATABASE_URL`: Your Supabase connection string.
-     - `CLIENT_URL`: Your frontend static URL.
-3. **Deploy Client on Render**:
-   - Create a **Static Site** pointing to the `client` directory.
-   - Build Command: `npm run build`
-   - Publish Directory: `dist`
-   - Add environment variable `VITE_SOCKET_URL` pointing to your Render backend web service.
+### Option B: Vercel + Render + Supabase (Recommended Free Tier Stack)
+
+#### 1. Database: Supabase (PostgreSQL)
+1. Sign up/log in at [supabase.com](https://supabase.com).
+2. Click **New Project** and enter a database password.
+3. Once the database is ready, go to **Project Settings** -> **Database** in the sidebar.
+4. Copy the **URI Connection String** under Connection String (select the **URI** format).
+5. Go to the **SQL Editor** tab in the Supabase sidebar.
+6. Click **New Query**, paste the full contents of your `server/src/db/schema.sql` file, and click **Run** to set up the tables, views, and indexes.
+
+#### 2. Backend: Render (Node.js + WebSockets)
+1. Sign up/log in at [render.com](https://render.com).
+2. Click **New** -> **Web Service** and connect your GitHub repository.
+3. Configure the following fields:
+   - **Root Directory**: `server`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+4. Under **Advanced Settings**, add these **Environment Variables**:
+   - `DATABASE_URL`: *Your Supabase connection string.*
+   - `CLIENT_URL`: *Your Vercel deployment URL (e.g. `https://your-battleship.vercel.app`).*
+5. Click **Create Web Service** and copy your backend URL when the build finishes (e.g. `https://battleship-backend.onrender.com`).
+
+#### 3. Frontend: Vercel (React + Vite)
+1. Sign up/log in at [vercel.com](https://vercel.com).
+2. Click **Add New** -> **Project** and import your GitHub repository.
+3. Configure the deployment:
+   - **Root Directory**: Click *Edit* and choose the `client` folder.
+   - **Framework Preset**: `Vite` (automatically detected).
+4. Add the following **Environment Variable**:
+   - Key: `VITE_SOCKET_URL`
+   - Value: *Your Render backend service URL.*
+5. Click **Deploy**.
+

@@ -12,6 +12,7 @@ export const PlayerProvider = ({ children }) => {
   });
   const [leaderboard, setLeaderboard] = useState([]);
   const [activePlayers, setActivePlayers] = useState(0);
+  const [sessions, setSessions] = useState([]);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Authenticate (register name)
@@ -56,7 +57,8 @@ export const PlayerProvider = ({ children }) => {
     });
 
     // Active player updates
-    socket.on('lobby-update', ({ activePlayers }) => {
+    socket.on('lobby-update', ({ sessions: openSessions, activePlayers }) => {
+      setSessions(openSessions);
       setActivePlayers(activePlayers);
     });
 
@@ -78,6 +80,7 @@ export const PlayerProvider = ({ children }) => {
         isAuthenticating,
         leaderboard,
         activePlayers,
+        sessions,
         login,
         logout
       }}

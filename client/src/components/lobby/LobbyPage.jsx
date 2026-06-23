@@ -8,11 +8,10 @@ import CreateGameModal from './CreateGameModal.jsx';
 import SoundToggle from '../ui/SoundToggle.jsx';
 
 export default function LobbyPage() {
-  const { playerName, leaderboard, activePlayers, logout } = usePlayer();
+  const { playerName, leaderboard, activePlayers, sessions, logout } = usePlayer();
   const { createGame, joinGame } = useGame();
   const { startMusic, stopMusic } = useSound();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sessions, setSessions] = useState([]);
 
   // Play background music on lobby mount
   useEffect(() => {
@@ -21,33 +20,6 @@ export default function LobbyPage() {
       stopMusic();
     };
   }, [startMusic, stopMusic]);
-
-  // Read sessions list via custom event from Socket.IO
-  const { socket } = usePlayer(); // wait, socket is in useSocket! Let's get it.
-  // Actually, we can listen to lobby updates via PlayerContext or write a socket listener here.
-  // In PlayerContext we already listen to lobby-update, but we only store activePlayers.
-  // Let's set up a listener here in LobbyPage for sessions updates.
-  const { socket: gameSocket, isConnected } = useGame(); // Wait! Let's use useSocket directly.
-  // Let's get socket from SocketContext.
-  
-  // Wait, let's look at PlayerContext.jsx: it listens to lobby-update to set activePlayers.
-  // Let's listen to 'lobby-update' here in LobbyPage too, or let's use the socket.
-  useEffect(() => {
-    if (!gameSocket || !isConnected) return;
-
-    // Send register / refresh event to receive list
-    gameSocket.emit('join-lobby', { playerName });
-
-    const handleLobbyUpdate = ({ sessions: openSessions }) => {
-      setSessions(openSessions);
-    };
-
-    gameSocket.on('lobby-update', handleLobbyUpdate);
-
-    return () => {
-      gameSocket.off('lobby-update', handleLobbyUpdate);
-    };
-  }, [gameSocket, isConnected, playerName]);
 
   // Find current player stats in leaderboard for display
   const myStats = leaderboard.find((player) => player.name === playerName) || {

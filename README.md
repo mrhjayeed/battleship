@@ -119,7 +119,7 @@ git push -u origin main
      - `CLIENT_URL`: Your frontend URL (e.g. `https://your-battleship.up.railway.app`).
 3. **Deploy Frontend**:
    - Create a service pointing to the `client/` subdirectory.
-   - Add a build environment variable: `VITE_SOCKET_URL` set to your backend service URL.
+   - Add a build environment variable: `VITE_SERVER_URL` set to your backend service URL.
    - Deploy as a static app.
 
 ### Option B: Vercel + Render + Supabase (Recommended Free Tier Stack)

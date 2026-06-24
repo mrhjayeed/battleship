@@ -1,157 +1,135 @@
-# 🚢 Battleship Multiplayer | Tactical Naval Combat
+# Battleship Multiplayer: Tactical Naval Combat
 
-A production-grade, real-time multiplayer Battleship game web application. Designed with modern gaming aesthetics, seamless real-time WebSocket gameplay, vs-AI tactical single-player simulations, and a global officer leaderboard powered by PostgreSQL.
-
----
-
-## 🌟 Key Features
-
-- **Real-Time Multiplayer**: Instant PvP lobby matchmaking, live coordinate attack grids, automatic turn countdown clocks (30s limits), and a secure chat communication link.
-- **Single Player vs AI**: Simulated single-player match against tactical AI players with adjustable rank difficulties (Easy, Medium, Hard).
-- **Global Rankings (Leaderboard)**: Live statistics leaderboard ranking top active tactical officers by PvP wins, accuracy, and win rates. AI practice matches are automatically excluded from rankings.
-- **Dynamic Session Handling**: Suffix-free usernames on login that only append numbers (e.g. `Captain Ahab 2`) if the name is actively online in the system at the exact same moment.
-- **Audio Soundscapes**: Adaptive naval battle music and missile impact sound effects with persistent volume toggles.
-- **State Recovery**: Robust reconnect routines allowing players to resume in-progress matches upon tab refreshes or network hiccups.
+An immersive, high-fidelity tactical naval combat simulator featuring real-time multiplayer PvP engagements, advanced AI battle systems, and a persistent global leaderboard.
 
 ---
 
-## 🛠️ Technology Stack
+## Overview
 
-* **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Socket.IO Client.
-* **Backend**: Node.js, Express, Socket.IO Server.
-* **Database**: PostgreSQL (Raw client pool).
-* **Styling & Assets**: Premium dark navy glassmorphic layout, SVG iconography.
+Battleship Multiplayer is a production-grade, real-time strategy web application designed for seamless PvP matchmaking and single-player tactical simulation. Engineered with glassmorphic aesthetics, instant WebSocket communication, and transaction-safe PostgreSQL statistics tracking, it delivers a competitive, responsive gaming experience directly in the browser.
 
 ---
 
-## 📂 Project Structure
+## Core Features
+
+### Real-Time Multiplayer PvP
+Instant peer-to-peer matchmaking through dedicated room codes or public lobbies. Features synchronized coordinate attack grids, real-time board states, a persistent session chat, and automated 30-second turn timers to ensure steady pacing.
+
+### Tactical Single-Player AI
+Battle against advanced simulated computer opponents. Adjustable ranking difficulties (Easy, Medium, and Hard) adapt to player proficiency by employing distinct grid search algorithms. AI practice matches are automatically isolated from the global rankings to preserve leaderboard integrity.
+
+### Global Officer Leaderboard
+A persistent ranking registry tracking top active tactical officers. Players are graded by total battles, wins, losses, win rates, and shot accuracy. Stats are updated in real time via PostgreSQL database triggers upon game finalization.
+
+### Dynamic Session & State Recovery
+Robust auto-reconnect routines allow players to resume in-progress matches instantly upon tab refreshes or network drops. Suffix-free usernames are assigned on login, dynamically appending index counters only when identical usernames are online simultaneously.
+
+### Immersive Audio Soundscapes
+Adaptive background orchestrations and responsive sound effects (missile launches, explosions, water splashes) provide immediate feedback for game actions, complete with a persistent volume toggle.
+
+---
+
+## Architecture & Tech Stack
+
+### Frontend Client
+* **Framework**: React 18 (bundled via Vite)
+* **Styling**: Tailored Tailwind CSS, glassmorphism, responsive viewport layouts (12x12 grid auto-scaling)
+* **Animations**: Framer Motion micro-interactions and status transitions
+* **Sockets**: Socket.IO Client for instant event propagation
+
+### Backend Server
+* **Runtime**: Node.js & Express
+* **Real-time Engine**: Socket.IO Server managing rooms and connection state
+* **State Management**: InMemory GameManager controlling turns, placement timers, disconnect timeouts, and AI instances
+
+### Database Layer
+* **Engine**: PostgreSQL
+* **Schema**: Relational tables for players and game sessions, with automatic view aggregation for leaderboard metrics
+
+---
+
+## Project Structure
 
 ```
 battleship/
-├── client/          # Frontend React Application
+├── client/              # Frontend React Application
 │   ├── src/
-│   │   ├── components/  # GamePages, Lobby, and UI buttons
+│   │   ├── components/  # User interfaces, gameboards, placement grids
 │   │   ├── context/     # GameState, PlayerRegistry, and Socket providers
-│   │   └── hooks/       # Custom hooks (timer, sounds)
-│   └── public/          # Favicon and audio assets
-└── server/          # Node.js + Express Backend
+│   │   └── hooks/       # Custom hook wrappers (timers, audio contexts)
+│   └── public/          # Static assets (favicon, sound elements)
+└── server/              # Node.js Express Server
     └── src/
-        ├── db/          # PostgreSQL schema and initialization
-        ├── game/        # AI logic and GameSession state engines
-        ├── players/     # Player stats and leaderboard registry
-        └── socket/      # WebSocket event controllers
+        ├── db/          # PostgreSQL database schema and client pool config
+        ├── game/        # AI tactical logic, GameManager, and session state
+        ├── players/     # Player profile and leaderboard controllers
+        └── socket/      # WebSocket event listeners and room routing
 ```
 
 ---
 
-## ⚙️ Local Development Setup
+## Local Development & Configuration
 
 ### Prerequisites
-- Node.js (v18+)
-- PostgreSQL (running locally)
+* Node.js (v18 or higher)
+* PostgreSQL database instance
 
-### 1. Database Initialization
-Create a database named `battleship` and run the script in `server/src/db/schema.sql` to initialize the tables:
+### 1. Database Setup
+Create a database named `battleship` and initialize the schema using the provided SQL file:
 ```bash
 psql -U postgres -d battleship -f server/src/db/schema.sql
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the `server/` directory:
+### 2. Server Configuration
+Create a `.env` file in the `server/` subdirectory:
 ```env
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@127.0.0.1:5432/battleship
 PORT=3001
-CLIENT_URL=http://localhost:5174
+CLIENT_URL=http://localhost:5173
 ```
 
-### 3. Install & Start Server
+### 3. Execution
+
+#### Start Backend
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-### 4. Install & Start Client
+#### Start Frontend
 ```bash
-cd ../client
+cd client
 npm install
 npm run dev
 ```
-Open `http://localhost:5174/` in your browser.
+The client application will run at `http://localhost:5173`.
 
 ---
 
-## 🚀 GitHub Push Guide
+## Deployment Playbook
 
-To push your repository to GitHub, open your terminal in the project root directory and execute:
+### Backend: Render (Node.js & WebSockets)
+1. Register a new **Web Service** on Render and link the repository.
+2. Configure the environment:
+   * **Root Directory**: `server`
+   * **Build Command**: `npm install`
+   * **Start Command**: `npm start`
+3. Add the following **Environment Variables**:
+   * `DATABASE_URL`: Your production PostgreSQL connection string.
+   * `CLIENT_URL`: Your production frontend URL (e.g., `https://battleship.vercel.app`).
+   * `PORT`: Set to `3001` or let Render assign one automatically.
 
-```bash
-# 1. Initialize Git Repository
-git init
+### Database: Supabase or Railway (PostgreSQL)
+1. Provision a PostgreSQL instance.
+2. Run the `server/src/db/schema.sql` script within the database's SQL Editor to set up the tables, views, and indexes.
+3. Copy the database connection URI to use in your backend's `DATABASE_URL` configuration.
 
-# 2. Stage All Project Files
-git add .
-
-# 3. Create First Commit
-git commit -m "feat: battleship tactical release with timer, active player counters, and AI exclusions"
-
-# 4. Link Your GitHub Repository (replace with your repo URL)
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-
-# 5. Rename Main Branch
-git branch -M main
-
-# 6. Push Files
-git push -u origin main
-```
-
----
-
-## ☁️ Deployment Instructions
-
-### Option A: Railway (Recommended — Best PostgreSQL support)
-1. **Prepare PostgreSQL**: Railway provides a PostgreSQL database out of the box. Create a Railway project and add a "PostgreSQL" service.
-2. **Deploy Backend**: 
-   - Add a new service from your GitHub repository pointing to the `server/` subdirectory.
-   - Set environment variables:
-     - `DATABASE_URL`: Automatically populated by Railway link.
-     - `PORT`: Set to `8080`.
-     - `CLIENT_URL`: Your frontend URL (e.g. `https://your-battleship.up.railway.app`).
-3. **Deploy Frontend**:
-   - Create a service pointing to the `client/` subdirectory.
-   - Add a build environment variable: `VITE_SERVER_URL` set to your backend service URL.
-   - Deploy as a static app.
-
-### Option B: Vercel + Render + Supabase (Recommended Free Tier Stack)
-
-#### 1. Database: Supabase (PostgreSQL)
-1. Sign up/log in at [supabase.com](https://supabase.com).
-2. Click **New Project** and enter a database password.
-3. Once the database is ready, go to **Project Settings** -> **Database** in the sidebar.
-4. Copy the **URI Connection String** under Connection String (select the **URI** format).
-5. Go to the **SQL Editor** tab in the Supabase sidebar.
-6. Click **New Query**, paste the full contents of your `server/src/db/schema.sql` file, and click **Run** to set up the tables, views, and indexes.
-
-#### 2. Backend: Render (Node.js + WebSockets)
-1. Sign up/log in at [render.com](https://render.com).
-2. Click **New** -> **Web Service** and connect your GitHub repository.
-3. Configure the following fields:
-   - **Root Directory**: `server`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-4. Under **Advanced Settings**, add these **Environment Variables**:
-   - `DATABASE_URL`: *Your Supabase connection string.*
-   - `CLIENT_URL`: *Your Vercel deployment URL (e.g. `https://your-battleship.vercel.app`).*
-5. Click **Create Web Service** and copy your backend URL when the build finishes (e.g. `https://battleship-backend.onrender.com`).
-
-#### 3. Frontend: Vercel (React + Vite)
-1. Sign up/log in at [vercel.com](https://vercel.com).
-2. Click **Add New** -> **Project** and import your GitHub repository.
-3. Configure the deployment:
-   - **Root Directory**: Click *Edit* and choose the `client` folder.
-   - **Framework Preset**: `Vite` (automatically detected).
-4. Add the following **Environment Variable**:
-   - Key: `VITE_SOCKET_URL`
-   - Value: *Your Render backend service URL.*
-5. Click **Deploy**.
-
+### Frontend: Vercel (Static Hosting)
+1. Create a new project on Vercel and import the repository.
+2. Configure the deployment:
+   * **Root Directory**: `client`
+   * **Framework Preset**: `Vite` (automatically detected)
+3. Add the following **Environment Variable**:
+   * `VITE_SOCKET_URL`: The URL of your deployed Render backend (e.g., `https://battleship-backend.onrender.com`).
+4. Execute the deployment.

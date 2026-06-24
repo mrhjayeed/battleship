@@ -282,58 +282,67 @@ export default function ShipPlacement() {
           <div className="flex flex-col select-none">
             {/* Top Coordinate Header (A, B, C...) */}
             <div className="flex pl-8 mb-2">
-              {Array(gridSize).fill(null).map((_, idx) => (
-                <div key={idx} className="w-8 sm:w-10 h-6 flex items-center justify-center font-heading font-bold text-xs text-navy/40">
-                  {getColLabel(idx)}
-                </div>
-              ))}
+              {Array(gridSize).fill(null).map((_, idx) => {
+                const cellWidthClass = gridSize > 10 ? 'w-6 sm:w-8' : 'w-8 sm:w-10';
+                return (
+                  <div key={idx} className={`${cellWidthClass} h-6 flex items-center justify-center font-heading font-bold text-xs text-navy/40`}>
+                    {getColLabel(idx)}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Grid rows */}
-            {Array(gridSize).fill(null).map((_, rIdx) => (
-              <div key={rIdx} className="flex">
-                {/* Left Coordinate Header (1, 2, 3...) */}
-                <div className="w-8 h-8 sm:w-8 sm:h-10 flex items-center justify-center font-heading font-bold text-xs text-navy/40 pr-2">
-                  {rIdx + 1}
+            {Array(gridSize).fill(null).map((_, rIdx) => {
+              const cellHeightClass = gridSize > 10 ? 'h-6 sm:h-8' : 'h-8 sm:h-10';
+              return (
+                <div key={rIdx} className="flex">
+                  {/* Left Coordinate Header (1, 2, 3...) */}
+                  <div className={`w-8 ${cellHeightClass} flex items-center justify-center font-heading font-bold text-xs text-navy/40 pr-2`}>
+                    {rIdx + 1}
+                  </div>
+
+                  {/* Cells */}
+                  {Array(gridSize).fill(null).map((_, cIdx) => {
+                    const placedShip = placedGridState[rIdx][cIdx];
+                    
+                    // Check if cell is hovered as part of current placement validation
+                    const isHovered = hoveredCells.some(cell => cell.y === rIdx && cell.x === cIdx);
+
+                    let cellColor = 'bg-white hover:bg-navy/5';
+                    if (placedShip) {
+                      cellColor = 'bg-navy text-white/90 border-navy/30';
+                    }
+
+                    if (isHovered) {
+                      cellColor = isValid ? 'bg-victory/30 border-victory' : 'bg-hit/30 border-hit';
+                    }
+
+                    const cellWidthClass = gridSize > 10 ? 'w-6 sm:w-8' : 'w-8 sm:w-10';
+                    const shipTextSize = gridSize > 10 ? 'text-[5px]' : 'text-[7px]';
+
+                    return (
+                      <div
+                        key={cIdx}
+                        onMouseEnter={() => setHoveredCell({ row: rIdx, col: cIdx })}
+                        onMouseLeave={() => setHoveredCell(null)}
+                        onClick={() => handleCellClick(rIdx, cIdx)}
+                        className={`${cellWidthClass} ${cellHeightClass} border border-navy/10 flex items-center justify-center cursor-pointer transition-all relative ${cellColor}`}
+                      >
+                        {/* Show placement silhouettes */}
+                        {placedShip && (
+                          <div className="absolute inset-1 rounded-sm bg-navy/20 border border-navy/40 flex items-center justify-center">
+                            <span className={`${shipTextSize} font-extrabold uppercase opacity-85 select-none tracking-tighter`}>
+                              {placedShip.type.slice(0, 3)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-
-                {/* Cells */}
-                {Array(gridSize).fill(null).map((_, cIdx) => {
-                  const placedShip = placedGridState[rIdx][cIdx];
-                  
-                  // Check if cell is hovered as part of current placement validation
-                  const isHovered = hoveredCells.some(cell => cell.y === rIdx && cell.x === cIdx);
-
-                  let cellColor = 'bg-white hover:bg-navy/5';
-                  if (placedShip) {
-                    cellColor = 'bg-navy text-white/90 border-navy/30';
-                  }
-
-                  if (isHovered) {
-                    cellColor = isValid ? 'bg-victory/30 border-victory' : 'bg-hit/30 border-hit';
-                  }
-
-                  return (
-                    <div
-                      key={cIdx}
-                      onMouseEnter={() => setHoveredCell({ row: rIdx, col: cIdx })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                      onClick={() => handleCellClick(rIdx, cIdx)}
-                      className={`w-8 h-8 sm:w-10 sm:h-10 border border-navy/10 flex items-center justify-center cursor-pointer transition-all relative ${cellColor}`}
-                    >
-                      {/* Show placement silhouettes */}
-                      {placedShip && (
-                        <div className="absolute inset-1 rounded-sm bg-navy/20 border border-navy/40 flex items-center justify-center">
-                          <span className="text-[7px] font-extrabold uppercase opacity-85 select-none tracking-tighter">
-                            {placedShip.type.slice(0, 3)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="mt-4 text-center text-xs text-navy/40 font-medium">
             💡 Tap a placed ship on the grid to recall it. Tap 'R' or use the toggle to rotate.

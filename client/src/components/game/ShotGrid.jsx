@@ -23,6 +23,12 @@ export default function ShotGrid() {
     fireShot(row, col);
   };
 
+  // Dynamic grid scaling based on size to prevent layout breaking
+  const cellWidthClass = gridSize > 10 ? 'w-6 sm:w-7' : 'w-8 sm:w-9';
+  const cellHeightClass = gridSize > 10 ? 'h-6 sm:h-7' : 'h-8 sm:h-9';
+  const emojiSizeClass = gridSize > 10 ? 'text-[6px]' : 'text-[8px]';
+  const dotSizeClass = gridSize > 10 ? 'w-1.5 h-1.5' : 'w-2.5 h-2.5';
+
   return (
     <div className="bg-white p-4 rounded-2xl border border-navy/10 shadow-sm flex flex-col items-center">
       <div className="mb-3">
@@ -33,7 +39,7 @@ export default function ShotGrid() {
         {/* Top Header Labels (A, B...) */}
         <div className="flex pl-8 mb-2">
           {Array(gridSize).fill(null).map((_, idx) => (
-            <div key={idx} className="w-8 sm:w-9 h-5 flex items-center justify-center font-heading font-bold text-[10px] text-navy/40">
+            <div key={idx} className={`${cellWidthClass} h-5 flex items-center justify-center font-heading font-bold text-[10px] text-navy/40`}>
               {getColLabel(idx)}
             </div>
           ))}
@@ -43,7 +49,7 @@ export default function ShotGrid() {
         {Array(gridSize).fill(null).map((_, rIdx) => (
           <div key={rIdx} className="flex">
             {/* Left Header Labels (1, 2...) */}
-            <div className="w-8 h-8 sm:h-9 flex items-center justify-center font-heading font-bold text-[10px] text-navy/40 pr-2">
+            <div className={`w-8 ${cellHeightClass} flex items-center justify-center font-heading font-bold text-[10px] text-navy/40 pr-2`}>
               {rIdx + 1}
             </div>
 
@@ -59,13 +65,13 @@ export default function ShotGrid() {
                   cellStyle = 'bg-hit/15 border-hit/30';
                   contents = (
                     <div className="absolute inset-1.5 rounded-sm bg-hit border border-hit/80 flex items-center justify-center shadow-inner animate-pulse-hit">
-                      <span className="text-white text-[8px] font-bold">💥</span>
+                      <span className={`text-white ${emojiSizeClass} font-bold`}>💥</span>
                     </div>
                   );
                 } else {
                   cellStyle = 'bg-miss/15 border-miss/30';
                   contents = (
-                    <div className="w-2.5 h-2.5 rounded-full bg-miss border border-miss/80 shadow animate-pulse-miss" />
+                    <div className={`${dotSizeClass} rounded-full bg-miss border border-miss/80 shadow animate-pulse-miss`} />
                   );
                 }
               } else if (isMyTurn) {
@@ -77,7 +83,7 @@ export default function ShotGrid() {
                 <div
                   key={cIdx}
                   onClick={() => handleCellClick(rIdx, cIdx)}
-                  className={`w-8 h-8 sm:w-9 sm:h-9 border flex items-center justify-center relative transition-all ${cellStyle}`}
+                  className={`${cellWidthClass} ${cellHeightClass} border flex items-center justify-center relative transition-all ${cellStyle}`}
                 >
                   {/* Subtle target crosshair dot on hover if it's our turn and cell is un-targeted */}
                   {!shot && isMyTurn && (

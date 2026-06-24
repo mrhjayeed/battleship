@@ -141,7 +141,7 @@ export default function GamePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Grids Stack */}
-          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6 justify-center">
+          <div className="lg:col-span-8 grid grid-cols-1 xl:grid-cols-2 gap-6 justify-center">
             <GameBoard />
             <ShotGrid />
           </div>

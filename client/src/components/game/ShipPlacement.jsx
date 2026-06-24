@@ -5,7 +5,7 @@ import { SHIP_TYPES, generateRandomPlacements, getShipCells } from '../../utils/
 import { getColLabel } from '../../utils/gridUtils.js';
 
 export default function ShipPlacement() {
-  const { gridSize, shipConfig, placeShips, lastEvent, setLastEvent } = useGame();
+  const { gridSize, shipConfig, placeShips, lastEvent, setLastEvent, myBoard } = useGame();
   const [placedShips, setPlacedShips] = useState([]);
   const [selectedShipType, setSelectedShipType] = useState(null);
   const [rotation, setRotation] = useState('h'); // 'h' | 'v'
@@ -206,7 +206,8 @@ export default function ShipPlacement() {
           <span className="text-xs font-bold text-navy uppercase tracking-wider">Orientation</span>
           <button
             onClick={() => setRotation(r => r === 'h' ? 'v' : 'h')}
-            className="px-4 py-1.5 bg-white border border-navy/10 hover:border-navy/20 text-navy font-bold text-xs rounded shadow-sm cursor-pointer transition-all flex items-center gap-1.5"
+            disabled={myBoard !== null}
+            className="px-4 py-1.5 bg-white border border-navy/10 hover:border-navy/20 text-navy font-bold text-xs rounded shadow-sm cursor-pointer transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none"
           >
             <span>{rotation === 'h' ? 'Horizontal (━)' : 'Vertical (┃)'}</span>
             <span className="text-[10px] bg-navy/10 px-1 rounded text-navy-dark">R</span>
@@ -218,8 +219,8 @@ export default function ShipPlacement() {
           <span className="block text-xs font-bold text-navy uppercase tracking-wider mb-3">WARSHIPS TO DEPLOY</span>
           <div className="space-y-2">
             {unplacedShips.length === 0 ? (
-              <p className="text-sm font-semibold text-victory bg-victory/5 border border-victory/10 p-4 rounded-xl text-center">
-                All warships successfully deployed. Confirm launch.
+              <p className="text-sm font-semibold text-victory bg-victory/5 border border-victory/10 p-4 rounded-xl text-center animate-pulse">
+                {myBoard ? 'Waiting for opponent deployments...' : 'All warships successfully deployed. Confirm launch.'}
               </p>
             ) : (
               // De-duplicate types to render selector options
@@ -231,11 +232,12 @@ export default function ShipPlacement() {
                   <button
                     key={type}
                     onClick={() => setSelectedShipType(type)}
+                    disabled={myBoard !== null}
                     className={`w-full p-3 rounded-xl border flex items-center justify-between text-left cursor-pointer transition-all ${
                       isSelected
                         ? 'border-ocean bg-ocean/5 text-ocean shadow-sm'
                         : 'border-navy/5 bg-white hover:border-navy/15 text-navy-dark'
-                    }`}
+                    } ${myBoard ? 'opacity-50 pointer-events-none' : ''}`}
                   >
                     <div>
                       <span className="text-sm font-bold block">{details.name}</span>
@@ -255,13 +257,15 @@ export default function ShipPlacement() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={handleAutoPlace}
-            className="py-2.5 bg-ocean/10 hover:bg-ocean/15 border border-ocean/20 text-ocean font-bold text-xs rounded-lg cursor-pointer transition-all shadow-sm"
+            disabled={myBoard !== null}
+            className="py-2.5 bg-ocean/10 hover:bg-ocean/15 border border-ocean/20 text-ocean font-bold text-xs rounded-lg cursor-pointer transition-all shadow-sm disabled:opacity-50 disabled:pointer-events-none"
           >
             Auto-Place
           </button>
           <button
             onClick={handleReset}
-            className="py-2.5 bg-hit/5 hover:bg-hit/10 border border-hit/15 text-hit font-bold text-xs rounded-lg cursor-pointer transition-all"
+            disabled={myBoard !== null}
+            className="py-2.5 bg-hit/5 hover:bg-hit/10 border border-hit/15 text-hit font-bold text-xs rounded-lg cursor-pointer transition-all disabled:opacity-50 disabled:pointer-events-none"
           >
             Reset Board
           </button>
@@ -269,16 +273,32 @@ export default function ShipPlacement() {
 
         <button
           onClick={handleConfirm}
-          disabled={placedShips.length !== totalShipsToPlace.length}
-          className="w-full py-3.5 bg-navy hover:bg-navy/95 disabled:opacity-40 text-white font-extrabold text-sm rounded-lg shadow-md cursor-pointer transition-all"
+          disabled={placedShips.length !== totalShipsToPlace.length || myBoard !== null}
+          className="w-full py-3.5 bg-navy hover:bg-navy/95 disabled:opacity-40 text-white font-extrabold text-sm rounded-lg shadow-md cursor-pointer transition-all flex items-center justify-center gap-2"
         >
-          Confirm Deployments
+          {myBoard ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              <span>Waiting for Opponent...</span>
+            </>
+          ) : (
+            'Confirm Deployments'
+          )}
         </button>
       </div>
 
       {/* Grid Canvas */}
-      <div className="lg:col-span-8 flex justify-center">
+      <div className={`lg:col-span-8 flex justify-center ${myBoard ? 'pointer-events-none select-none' : ''}`}>
         <div className="bg-white p-6 rounded-2xl border border-navy/10 shadow-sm relative overflow-hidden">
+          {myBoard && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-xs z-20 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+              <div className="w-12 h-12 border-4 border-navy/20 border-t-navy rounded-full animate-spin mb-4" />
+              <h3 className="text-lg font-bold text-navy-dark">Deployments Confirmed</h3>
+              <p className="text-xs text-navy/60 max-w-xs mt-1">
+                Your fleet coordinates are locked. Waiting for the enemy commander to finish their deployments.
+              </p>
+            </div>
+          )}
           <div className="flex flex-col select-none">
             {/* Top Coordinate Header (A, B, C...) */}
             <div className="flex pl-8 mb-2">

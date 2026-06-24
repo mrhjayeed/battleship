@@ -51,21 +51,37 @@ async function getOpenSessions() {
 export function registerSocketHandlers(io) {
   gameManager.setIo(io);
 
+  const broadcastLobbyUpdate = async () => {
+    try {
+      const sessions = await getOpenSessions();
+      const activePlayersCount = getActivePlayersCount();
+      io.to('lobby').emit('lobby-update', {
+        sessions,
+        activePlayers: activePlayersCount
+      });
+    } catch (err) {
+      console.error('Error fetching lobby sessions:', err);
+    }
+  };
+
+  const broadcastLeaderboardUpdate = async () => {
+    try {
+      const leaders = await getLeaderboard();
+      io.emit('leaderboard-update', leaders);
+    } catch (err) {
+      console.error('Error broadcasting leaderboard:', err);
+    }
+  };
+
+  // Register callback on gameManager to update stats and lobby in real time
+  gameManager.onGameFinished = async () => {
+    console.log('Game finished callback triggered: broadcasting lobby and leaderboard updates');
+    await broadcastLobbyUpdate();
+    await broadcastLeaderboardUpdate();
+  };
+
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
-
-    const broadcastLobbyUpdate = async () => {
-      try {
-        const sessions = await getOpenSessions();
-        const activePlayersCount = getActivePlayersCount();
-        io.to('lobby').emit('lobby-update', {
-          sessions,
-          activePlayers: activePlayersCount
-        });
-      } catch (err) {
-        console.error('Error fetching lobby sessions:', err);
-      }
-    };
 
     // --- LOBBY SYSTEM ---
 
@@ -492,58 +508,97 @@ export function registerSocketHandlers(io) {
     });
 
     // --- LEAVE / FORFEIT ---
-
+ 
     socket.on('leave-game', async ({ gameId }) => {
       const meta = socketMetadata.get(socket.id);
       if (!meta) return;
-
+ 
       const session = gameManager.getGame(gameId);
-      if (!session || session.status !== 'active') {
-        // If game is in placement or waiting, we can just leave gracefully
+      if (!session) {
         socket.leave(gameId);
+        socket.join('lobby');
         if (meta.currentGameId === gameId) meta.currentGameId = null;
+        broadcastLobbyUpdate();
         return;
       }
-
+ 
+      if (session.status === 'waiting' || session.status === 'placing') {
+        console.log(`Player ${meta.playerName} left game ${gameId} during status ${session.status} - aborting`);
+        session.status = 'finished';
+        session.finishedAt = new Date();
+        await session.save();
+ 
+        io.to(gameId).emit('game-over', {
+          winner: null,
+          reason: 'aborted',
+          stats: null
+        });
+ 
+        socket.leave(gameId);
+        socket.join('lobby');
+        if (meta.currentGameId === gameId) meta.currentGameId = null;
+        gameManager.cleanup(gameId);
+        return;
+      }
+ 
       const role = session.hostPlayerId === meta.playerId ? 'host' : 'guest';
       const winnerRole = role === 'host' ? 'guest' : 'host';
-
+ 
       console.log(`Player ${meta.playerName} left game ${gameId} - forfeit`);
-
+ 
       session.status = 'finished';
       session.winnerPlayerId = winnerRole === 'host' ? session.hostPlayerId : session.guestPlayerId;
       session.finishedAt = new Date();
       await session.save();
-
+ 
       await gameManager.finalizeStats(session);
-
+ 
       io.to(gameId).emit('game-over', {
         winner: winnerRole,
         reason: 'forfeit',
         stats: gameManager.getGameSummaryStats(session)
       });
-
+ 
+      socket.leave(gameId);
+      socket.join('lobby');
+      if (meta.currentGameId === gameId) meta.currentGameId = null;
       gameManager.cleanup(gameId);
     });
-
+ 
     // --- SOCKET DISCONNECT ---
-
-    socket.on('disconnect', () => {
+ 
+    socket.on('disconnect', async () => {
       console.log(`Socket disconnected: ${socket.id}`);
       const meta = socketMetadata.get(socket.id);
       if (meta) {
         const playerName = meta.playerName;
-
+ 
         const gameId = meta.currentGameId;
         if (gameId) {
           const session = gameManager.getGame(gameId);
-          if (session && session.status === 'active') {
-            const role = session.hostPlayerId === meta.playerId ? 'host' : 'guest';
-            // Start 60-second forfeit timer
-            gameManager.startDisconnectTimer(gameId, role);
-
-            // Notify opponent that player is disconnected
-            io.to(gameId).emit('opponent-disconnected', { playerName });
+          if (session) {
+            if (session.status === 'active') {
+              const role = session.hostPlayerId === meta.playerId ? 'host' : 'guest';
+              // Start 60-second forfeit timer
+              gameManager.startDisconnectTimer(gameId, role);
+ 
+              // Notify opponent that player is disconnected
+              io.to(gameId).emit('opponent-disconnected', { playerName });
+            } else if (session.status === 'waiting' || session.status === 'placing') {
+              // Abort game immediately since player disconnected during waiting/placing
+              console.log(`Aborting game ${gameId} because player ${playerName} disconnected during ${session.status}`);
+              session.status = 'finished';
+              session.finishedAt = new Date();
+              await session.save();
+ 
+              io.to(gameId).emit('game-over', {
+                winner: null,
+                reason: 'aborted',
+                stats: null
+              });
+ 
+              gameManager.cleanup(gameId);
+            }
           }
         }
       }

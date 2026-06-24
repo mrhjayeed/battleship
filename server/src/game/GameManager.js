@@ -8,6 +8,7 @@ class GameManager {
     this.activeGames = new Map(); // gameId -> GameSession instance
     this.timers = new Map(); // gameId -> { placementTimeout, turnTimeout, disconnectTimeout }
     this.io = null;
+    this.onGameFinished = null;
   }
 
   setIo(io) {
@@ -283,6 +284,9 @@ class GameManager {
     this.clearDisconnectTimeout(gameId);
     this.activeGames.delete(gameId);
     this.timers.delete(gameId);
+    if (typeof this.onGameFinished === 'function') {
+      this.onGameFinished(gameId);
+    }
   }
 
   clearDisconnectTimeout(gameId) {

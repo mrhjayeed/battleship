@@ -43,6 +43,7 @@ export default function LobbyPage() {
         <div className="flex items-center gap-3">
           <svg className="w-8 h-8 text-navy" viewBox="0 0 24 12" fill="currentColor">
             <path d="M2,8 L22,8 L20,3 L15,3 L14,1 L10,1 L9,3 L4,3 Z" />
+            <rect x="1" y="9" width="22" height="2" rx="1" />
           </svg>
           <span className="font-heading font-extrabold text-xl text-navy tracking-tight">
             NEXUS BATTLECENTER

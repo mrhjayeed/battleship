@@ -14,11 +14,15 @@ export const PlayerProvider = ({ children }) => {
   const [activePlayers, setActivePlayers] = useState(0);
   const [sessions, setSessions] = useState([]);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [pendingLoginName, setPendingLoginName] = useState('');
 
   // Authenticate (register name)
   const login = (baseName) => {
-    if (!socket || !isConnected) return;
     setIsAuthenticating(true);
+    if (!socket || !isConnected) {
+      setPendingLoginName(baseName);
+      return;
+    }
     socket.emit('join-lobby', { playerName: baseName });
   };
 
@@ -35,12 +39,15 @@ export const PlayerProvider = ({ children }) => {
 
   useEffect(() => {
     if (!socket || !isConnected) return;
-
-    // If we have a saved player name, auto-authenticate on socket connect/reconnect
-    if (playerName) {
+ 
+    if (pendingLoginName) {
+      console.log('Executing pending login for:', pendingLoginName);
+      socket.emit('join-lobby', { playerName: pendingLoginName });
+      setPendingLoginName('');
+    } else if (playerName) {
       socket.emit('join-lobby', { playerName });
     }
-
+ 
     // Name assignment reply
     socket.on('name-assigned', ({ finalName, player }) => {
       console.log('Name assigned from server:', finalName);
@@ -50,24 +57,24 @@ export const PlayerProvider = ({ children }) => {
       localStorage.setItem('battleship_player_id', player.id.toString());
       setIsAuthenticating(false);
     });
-
+ 
     // Leaderboard update
     socket.on('leaderboard-update', (data) => {
       setLeaderboard(data);
     });
-
+ 
     // Active player updates
     socket.on('lobby-update', ({ sessions: openSessions, activePlayers }) => {
       setSessions(openSessions);
       setActivePlayers(activePlayers);
     });
-
+ 
     return () => {
       socket.off('name-assigned');
       socket.off('leaderboard-update');
       socket.off('lobby-update');
     };
-  }, [socket, isConnected]);
+  }, [socket, isConnected, pendingLoginName, playerName]);
 
   const isAuthenticated = !!playerName && !!playerId;
 

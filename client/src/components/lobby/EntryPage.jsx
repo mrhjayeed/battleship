@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { motion } from 'framer-motion';
 
@@ -6,6 +6,19 @@ export default function EntryPage() {
   const { login, isAuthenticating } = usePlayer();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [showWakingNotice, setShowWakingNotice] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (isAuthenticating) {
+      timer = setTimeout(() => {
+        setShowWakingNotice(true);
+      }, 3000);
+    } else {
+      setShowWakingNotice(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isAuthenticating]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -95,6 +108,16 @@ export default function EntryPage() {
               'Deploy Fleet'
             )}
           </button>
+
+          {showWakingNotice && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs font-semibold text-ocean animate-pulse text-center mt-3"
+            >
+              The free-tier server is booting up. This first request may take up to 60 seconds. Thank you for your patience!
+            </motion.p>
+          )}
         </form>
 
         <div className="mt-8 pt-6 border-t border-navy/10 text-xs text-navy/60">

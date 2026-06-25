@@ -133,3 +133,11 @@ The client application will run at `http://localhost:5173`.
 3. Add the following **Environment Variable**:
    * `VITE_SOCKET_URL`: The URL of your deployed Render backend (e.g., `https://battleship-backend.onrender.com`).
 4. Execute the deployment.
+
+---
+
+## License & Credits
+
+Developed by **M. R. Haque Jayeed** ([jayeed.dev](https://jayeed.dev)).
+
+This project is licensed under the [MIT License](LICENSE).

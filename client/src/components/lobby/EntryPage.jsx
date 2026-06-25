@@ -40,12 +40,15 @@ export default function EntryPage() {
   };
 
   return (
-    <div className="min-height-screen w-full flex items-center justify-center bg-gradient-to-br from-bg-slate via-white to-miss/10 px-4 py-16 flex-1">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-gradient-to-br from-bg-slate via-white to-miss/10 px-4 py-8">
+      {/* Spacer to push card to center */}
+      <div />
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md p-8 glass rounded-2xl text-center relative overflow-hidden"
+        className="w-full max-w-md p-8 glass rounded-2xl text-center relative overflow-hidden mx-auto my-8"
       >
         {/* Navy styling accent lines */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-navy via-ocean to-miss" />
@@ -124,6 +127,11 @@ export default function EntryPage() {
           No registration required. Enter a name to play immediately.
         </div>
       </motion.div>
+
+      {/* Footer */}
+      <footer className="text-center text-xs text-navy/50 font-medium py-4">
+        <p>© 2026 Nexus Battlecenter. Developed by <a href="https://jayeed.dev" target="_blank" rel="noopener noreferrer" className="hover:text-ocean underline transition-colors">Jayeed</a>.</p>
+      </footer>
     </div>
   );
 }

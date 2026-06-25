@@ -198,6 +198,11 @@ export default function LobbyPage() {
         </div>
       </main>
 
+      {/* Footer */}
+      <footer className="bg-white border-t border-navy/10 py-6 text-center text-xs text-navy/50 font-medium z-10">
+        <p>© 2026 Nexus Battlecenter. Developed by <a href="https://jayeed.dev" target="_blank" rel="noopener noreferrer" className="hover:text-ocean underline transition-colors">Jayeed</a>.</p>
+      </footer>
+
       {/* Settings Modal */}
       <CreateGameModal
         isOpen={isModalOpen}

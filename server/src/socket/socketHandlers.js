@@ -1,5 +1,5 @@
 import pool from '../db/db.js';
-import { assignName, getOrCreateAIPlayer, getLeaderboard } from '../players/PlayerRegistry.js';
+import { assignName, getOrCreateAIPlayer, getLeaderboard, getPlayerById } from '../players/PlayerRegistry.js';
 import { GameSession } from '../game/GameSession.js';
 import { gameManager } from '../game/GameManager.js';
 import { generateRandomBoard } from '../game/ShipLogic.js';
@@ -85,17 +85,42 @@ export function registerSocketHandlers(io) {
 
     // --- LOBBY SYSTEM ---
 
-    socket.on('join-lobby', async ({ playerName }) => {
+    socket.on('join-lobby', async ({ playerName, playerId }) => {
       try {
         if (!playerName) {
           socket.emit('error-msg', 'Name is required');
           return;
         }
 
-        // Assign name and upsert in DB
-        const activeNames = getActiveNames();
-        const player = await assignName(playerName, activeNames);
-        const finalName = player.name;
+        let player;
+        let finalName;
+
+        // If player already has an ID, retrieve their DB record
+        if (playerId) {
+          player = await getPlayerById(playerId);
+        }
+
+        if (player) {
+          // Check if their current registered name is in use by another player ID
+          const isNameActiveForSomeoneElse = Array.from(socketMetadata.values()).some(
+            (meta) => meta.playerName === player.name && meta.playerId !== player.id
+          );
+
+          if (!isNameActiveForSomeoneElse) {
+            // Safe to reuse the existing name
+            finalName = player.name;
+          } else {
+            // Colliding name with a different player. Assign a new name using their base name.
+            const activeNames = getActiveNames();
+            player = await assignName(player.base_name || player.name, activeNames);
+            finalName = player.name;
+          }
+        } else {
+          // New player or no ID provided
+          const activeNames = getActiveNames();
+          player = await assignName(playerName, activeNames);
+          finalName = player.name;
+        }
 
         // Save metadata
         socketMetadata.set(socket.id, {

@@ -23,7 +23,7 @@ export const PlayerProvider = ({ children }) => {
       setPendingLoginName(baseName);
       return;
     }
-    socket.emit('join-lobby', { playerName: baseName });
+    socket.emit('join-lobby', { playerName: baseName, playerId });
   };
 
   const logout = () => {
@@ -42,10 +42,10 @@ export const PlayerProvider = ({ children }) => {
  
     if (pendingLoginName) {
       console.log('Executing pending login for:', pendingLoginName);
-      socket.emit('join-lobby', { playerName: pendingLoginName });
+      socket.emit('join-lobby', { playerName: pendingLoginName, playerId });
       setPendingLoginName('');
     } else if (playerName) {
-      socket.emit('join-lobby', { playerName });
+      socket.emit('join-lobby', { playerName, playerId });
     }
  
     // Name assignment reply

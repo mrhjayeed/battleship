@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from './SocketContext.jsx';
 import { usePlayer } from './PlayerContext.jsx';
 
@@ -7,6 +7,7 @@ const GameContext = createContext(null);
 export const GameProvider = ({ children }) => {
   const { socket, isConnected } = useSocket();
   const { playerName } = usePlayer();
+  const lastSocketIdRef = useRef(null);
 
   const [gameId, setGameId] = useState(() => localStorage.getItem('battleship_active_game_id') || null);
   const [status, setStatus] = useState('lobby'); // lobby | placing | active | finished
@@ -119,6 +120,7 @@ export const GameProvider = ({ children }) => {
       setAiDifficulty(diff);
       setStatus(initialStatus);
       localStorage.setItem('battleship_active_game_id', newGameId);
+      lastSocketIdRef.current = socket.id;
     });
 
     // Opponent joined
@@ -194,6 +196,7 @@ export const GameProvider = ({ children }) => {
       setWinnerId(data.winnerId);
       setOpponentDisconnected(false);
       localStorage.setItem('battleship_active_game_id', data.gameId);
+      lastSocketIdRef.current = socket.id;
     });
 
     // Opponent disconnected/reconnected
@@ -235,12 +238,14 @@ export const GameProvider = ({ children }) => {
     };
   }, [socket, isConnected, role, resetGameState]);
 
-  // Handle rejoining on first mount if gameId is stored in localStorage
+  // Handle rejoining on first mount or reconnection if gameId is stored in localStorage
   useEffect(() => {
-    if (gameId && playerName && isConnected && status === 'lobby') {
+    if (gameId && playerName && isConnected && socket && socket.id !== lastSocketIdRef.current) {
+      console.log('Socket ID changed, rejoining game:', gameId);
+      lastSocketIdRef.current = socket.id;
       rejoinGame(gameId);
     }
-  }, [gameId, playerName, isConnected, status, rejoinGame]);
+  }, [gameId, playerName, isConnected, socket, rejoinGame]);
 
   return (
     <GameContext.Provider
